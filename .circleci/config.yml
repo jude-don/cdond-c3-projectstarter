@@ -81,7 +81,7 @@ jobs:
           command: |
             cd frontend
             npm install
-            npm audit fix --force
+    #        npm audit fix --force
             npm update
             npm run test
 
