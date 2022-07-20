@@ -97,61 +97,40 @@ jobs:
             cd backend
             npm install
             npm run test
-
-
-
-
-
-
-  # test-frontend:
-  #   docker:
-  #     - image: circleci/node:13.8.0
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         keys: [frontend-build]
-  #     - run:
-  #         name: Run front-end test
-  #         command: |
-  #           cd frontend
-  #           npm install
-  #           npm run test
-  #     # Restore from cache
-  #     # Your job code here
-                
-  # test-backend:
-  #   docker:
-  #     - image: circleci/node:13.8.0
-  #     # Docker image here
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         keys: [backend1-build]
-  #     - run:
-  #         name: Run back-end test
-  #         command: |
-  #           cd backend
-  #           npm install
-  #           npm run test
+            
+  scan-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run: 
+          name: Scan frontend 
+          command: |
+            cd frontend
+            npm install
+            npm audit --audit-level=critical
       # Checkout code from git
       # Restore from cache
       # Your job code here
-            
-  # scan-frontend:
-  #   docker:
-  #     # Docker image here
-  #   steps:
-  #     # Checkout code from git
-  #     # Restore from cache
-  #     # Your job code here
 
-  # scan-backend:
-  #   docker:
-  #     # Docker image here
-  #   steps:
-  #     # Checkout code from git
-  #     # Restore from cache
-  #     # Your job code here
+  scan-backend:
+    docker:
+      # Docker image here
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backendd-build]
+      - run: 
+          name: Scan backend 
+          command: |
+            cd backend
+            npm install
+            npm audit --audit-level=critical
+      # Checkout code from git
+      # Restore from cache
+      # Your job code here
 
   # deploy-infrastructure:
   #   docker:
@@ -330,3 +309,9 @@ workflows:
       - test-backend:
           requires: 
             - build-backend
+      - scan-backend:
+          requires:
+            - build-backend
+      - scan-frontend:
+          requires:
+            - build-frontend
