@@ -54,11 +54,11 @@ jobs:
 
   build-backend:
     docker:
-      - image: cimg/node:18.4.0
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend1-build]
       - run:
           name: Back-end build
           command: |
@@ -67,7 +67,15 @@ jobs:
              npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build
+          key: backend1-build
+
+  # test-frontend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: []
 
   test-frontend:
     docker:
@@ -75,7 +83,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys:[frontend-build]
+          keys: [frontend-build]
       - run:
           name: Run front-end test
           command: |
@@ -87,12 +95,12 @@ jobs:
                 
   test-backend:
     docker:
-      - image: cimg/node:18.4.0
+      - image: circleci/node:13.8.0
       # Docker image here
     steps:
       - checkout
       - restore_cache:
-          keys:[backend-build]
+          keys: [backend1-build]
       - run:
           name: Run back-end test
           command: |
