@@ -178,7 +178,7 @@ jobs:
           command: |
             aws ec2 describe-instances \        
               --query 'Reservations[*].Instances[*].PublicIpAddress' \      
-              --filters "Name=tag:Project,Values=udacity" \       
+              --filters "Name=tag:project,Values=udapeople" \       
               --output text >> .circleci/ansible/inventory.txt \
             exit 1
       - persist_to_workspace:
@@ -336,4 +336,9 @@ workflows:
       - scan-frontend:
           requires:
             - build-frontend
-      - deploy-infrastructure
+      - deploy-infrastructure:
+          requires:
+            - test-frontend 
+            - test-backend 
+            - scan-frontend 
+            - scan-backend]
