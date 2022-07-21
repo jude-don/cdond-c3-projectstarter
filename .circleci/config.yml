@@ -178,10 +178,7 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             yum install -y tar gzip
-            aws ec2 describe-instances \      
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople" \          
-              --output text >> .circleci/ansible/inventory.txt
+            aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -189,6 +186,8 @@ jobs:
       # Here's where you will add some code to rollback on failure fhgh
       - destroy-environment      
 
+
+              # --filters "Name=tag:project,Values=udapeople" \   
   # configure-infrastructure:
   #   docker:
   #     - image: python:3.7-alpine3.11
