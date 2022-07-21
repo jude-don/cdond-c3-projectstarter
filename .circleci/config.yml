@@ -177,6 +177,7 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
+            yum install -y tar gzip
             aws ec2 describe-instances \        
               --query 'Reservations[*].Instances[*].PublicIpAddress' \          
               --output text >> .circleci/ansible/inventory.txt
@@ -189,15 +190,18 @@ jobs:
 
   # configure-infrastructure:
   #   docker:
-  #     # Docker image here that supports Ansible
+  #     - image: python:3.7-alpine3.11
   #   steps:
-  #     # Checkout code from git
+        - checkout
   #     # Add ssh keys with fingerprint
+  #     - add_ssh_keys:
+  #         fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
   #     # attach workspace
   #     - run:
   #         name: Install dependencies
   #         command: |
   #           # Your code here
+  #            apk add --update ansible
   #           exit 1
   #     - run:
   #         name: Configure server
