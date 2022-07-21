@@ -188,27 +188,29 @@ jobs:
 
 
               # --filters "Name=tag:project,Values=udapeople" \   
-  # configure-infrastructure:
-  #   docker:
-  #     - image: python:3.7-alpine3.11
-  #   steps:
-       # - checkout
-  #     # Add ssh keys with fingerprint
-  #     - add_ssh_keys:
-  #         fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
-  #     # attach workspace
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           # Your code here
-  #            apk add --update ansible
-  #           exit 1
-  #     - run:
-  #         name: Configure server
-  #         command: |
-  #           # Your code here
-  #           exit 1
-  #     # Here's where you will add some code to rollback on failure      
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
+      # attach workspace
+      - run:
+          name: Install dependencies
+          command: |
+            # Your code here
+            apk add --update ansible
+
+      - run:
+          name: Configure server
+          command: |
+            # Your code here
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
+
+      # Here's where you will add some code to rollback on failure      
 
   # run-migrations:
   #   docker:
