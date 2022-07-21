@@ -178,8 +178,9 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             yum install -y tar gzip
-            aws ec2 describe-instances \        
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \          
+            aws ec2 describe-instances \      
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople" \          
               --output text >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
