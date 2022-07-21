@@ -348,3 +348,11 @@ workflows:
             - test-backend 
             - scan-frontend 
             - scan-backend
+
+      - configure-infrastructure:
+        requires:
+          - test-frontend 
+          - test-backend 
+          - scan-frontend 
+          - scan-backend
+          - deploy-infrastructure
