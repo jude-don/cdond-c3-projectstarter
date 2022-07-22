@@ -436,7 +436,7 @@ workflows:
             - scan-frontend 
             - scan-backend
 
-      - configure-infrastructure
+      - configure-infrastructure:
           requires:
             - deploy-infrastructure
       
