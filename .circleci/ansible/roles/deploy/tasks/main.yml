@@ -1,0 +1,28 @@
+
+---
+- name: Upgrade npm
+  become: true
+  shell: |
+    npm install -g npm@latest
+- name: Copy compiled files
+  unarchive:
+    src: /root/project/backend.tar.gz
+    dest: /home/ubuntu/
+
+- name: Build backend
+  ignore_errors: yes
+  shell: |
+    cd /home/ubuntu/backend
+    npm i
+    npm run build
+- name: Stop and delete already running server
+  ignore_errors: yes
+  shell: |
+    pm2 stop backend
+    pm2 delete backend
+- name: Start server
+  become: true
+  shell: |
+    cd /home/ubuntu/backend
+    pm2 start npm --name backend -- start
+    pm2 ls
