@@ -183,7 +183,7 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      # Here's where you will add some code to rollback on failure fhgh
+      # Here's where you will add some code to rollback on failure fhgh hfh
       - destroy-environment      
 
 
@@ -350,9 +350,5 @@ workflows:
             - scan-backend
 
       - configure-infrastructure:
-        requires:
-          - test-frontend 
-          - test-backend 
-          - scan-frontend 
-          - scan-backend
-          - deploy-infrastructure
+          requires:
+            - deploy-infrastructure
