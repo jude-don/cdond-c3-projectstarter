@@ -246,7 +246,8 @@ jobs:
       - run:
           name: Run migrations
           command: |
-            cd ./backend
+            cd backend
+            npm install
             npm run migrations > migrations_dump.txt
       - run:
           name: Send migration results to memstash.io OR kvdb.io
@@ -257,8 +258,16 @@ jobs:
               echo "Database migration has been executed successfully"
               curl -H "Content-Type: text/plain" -H "token: 7933fe63-4687-4fa1-8426-aa25aa1730ec" --request PUT --data "1" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
             fi
+      - run:
+          name: Send database migration status to memstash
+          command: |
+            if grep "has been executed successfully" ./backend/migrations_log.txt;
+            then
+              curl -H "Content-Type: text/plain" -H "token: 7079126b-54c1-4ae1-b7cf-577d8a27c76f" --request PUT --data "1" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}
+            fi
+      - destroy-environment
       # Here's where you will add some code to rollback on failure
-      - destroy-environment    
+  
 
   deploy-frontend:
     docker:
