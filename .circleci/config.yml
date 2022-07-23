@@ -29,7 +29,7 @@ commands:
   #           aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
   #           aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive       
 
-  revert-migrations:   
+  revert-migrations:
     steps:
       - run:
           name: Revert migrations
@@ -58,7 +58,6 @@ jobs:
           command: |
             cd frontend
             npm install
-            npm audit fix --force
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
@@ -76,17 +75,16 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backendd-build]
+          keys: [backendded-build]
       - run:
           name: Back-end build
           command: |
              cd backend
              npm install
-             npm audit fix --force
              npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backendd-build
+          key: backendded-build
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -122,7 +120,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backendd-build]
+          keys: [backendded-build]
       - run: 
           name: Run backend test
           command: |
@@ -159,7 +157,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backendd-build]
+          keys: [backendded-build]
       - run: 
           name: Scan backend 
           command: |
@@ -242,7 +240,7 @@ jobs:
       # Checkout code from git
       - checkout
       - restore_cache:
-          keys: [backendd-build]      
+          keys: [backendded-build]      
       - attach_workspace:
           at: ~/   
       - run:
