@@ -59,7 +59,6 @@ jobs:
             cd frontend
             npm install
             npm audit fix --force
-            npm update
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
@@ -84,7 +83,6 @@ jobs:
              cd backend
              npm install
              npm audit fix --force
-             npm update
              npm run build
       - save_cache:
           paths: [backend/node_modules]
