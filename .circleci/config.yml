@@ -370,28 +370,50 @@ jobs:
       - destroy-environment 
       - revert-migrations   
 
-  # smoke-test:
-  #   docker:
-  #     # Lightweight Docker image 
-  #   steps:
-  #     # Checkout code from git
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           # your code here
-  #     - run:
-  #         name: Get backend url
-  #         command: |
-  #           # your code here
-  #     - run:
-  #         name: Backend smoke test.
-  #         command: |
-  #           # your code here
-  #     - run:
-  #         name: Frontend smoke test.
-  #         command: |
-  #           # your code here
-  #     # Here's where you will add some code to rollback on failure  
+  smoke-test:
+    docker:
+      - image: alpine:latest 
+    steps:
+      # Checkout code from git
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+            apk --no-cache add curl
+            apk add --update npm
+            apk add --no-cache python3 py3-pip \
+              && pip3 install --upgrade pip \
+              && pip install awscli
+      - create-dotenv-file            
+      # - run:
+      #     name: Get backend url
+      #     command: |
+      #       # your code here
+
+      - run:
+          name: Backend smoke test.
+          command: |
+            # your code here
+            BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            curl -s "${API_URL}/api/status" -v
+      - run:
+          name: Frontend smoke test.
+          command: |
+            # your code here
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-west-2.amazonaws.com"
+            echo ${URL}
+            if curl -s ${URL} | grep "Welcome"
+            then 
+              exit 0 
+            else
+              exit 1
+            fi
+      # Here's where you will add some code to rollback on failure  
 
 #   cloudfront-update:
 #     docker:
