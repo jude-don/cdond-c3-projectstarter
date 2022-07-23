@@ -244,9 +244,9 @@ jobs:
           command: |
             cd backend
             npm install
-            npm i 
+            npm audit fix --force
+            npm update
             npm run migrations > migrations_dump.txt
-            cat ./migrations_dump.txt
       - run:
           name: Send migration results to memstash.io OR kvdb.io
           command: |
