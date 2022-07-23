@@ -4,32 +4,34 @@ orbs:
 
 
 commands:
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    steps:
+      - run:
+          name: Destroy environments
+          when: on_fail
+          command: |
+            # Delete files from S3 bucket
+            aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
+            # Delete frontend stack
+            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
+            # Delete backend stack
+            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
+
   # destroy-environment:
-  #   description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
-  #   parameters:
-  #     # Add parameter here   
   #   steps:
   #     - run:
-  #         name: Destroy environments
+  #         name: Destroy environment -Backend
   #         when: on_fail
   #         command: |
   #           aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+
+  #     - run:
+  #         name: Destroy environment -Frontend
+  #         when: on_fail
+  #         command: |
   #           aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
-
-  destroy-environment:
-    steps:
-      - run:
-          name: Destroy environment -Backend
-          when: on_fail
-          command: |
-            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
-
-      - run:
-          name: Destroy environment -Frontend
-          when: on_fail
-          command: |
-            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
-            aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive       
+  #           aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive       
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -246,16 +248,14 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
+      - restore_cache:
+          keys: [backendd-build]      
       - attach_workspace:
-            at: ~/   
+          at: ~/   
       - run:
           name: Run migrations
           command: |
-            cd backend
-            # npm install
-            # npm audit fix --force
-            # npm update
-            # npm audit fix
+            cd ./backend
             npm run migrations > migrations_dump.txt
       - run:
           name: Send migration results to memstash.io OR kvdb.io
@@ -266,7 +266,6 @@ jobs:
               echo "Database migration has been executed successfully"
               curl -H "Content-Type: text/plain" -H "token: 7933fe63-4687-4fa1-8426-aa25aa1730ec" --request PUT --data "1" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
             fi
-
       # Here's where you will add some code to rollback on failure
       - destroy-environment      
 
