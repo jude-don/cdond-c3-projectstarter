@@ -289,8 +289,7 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
-      - attach_workspace:
-          at: ~/      
+   
       - run:
           name: Install dependencies
           command: |
@@ -298,6 +297,9 @@ jobs:
             yum install -y tar gzip
             curl -sL https://rpm.nodesource.com/setup_10.x | bash -
             yum install -y nodejs
+
+      - attach_workspace:
+          at: ~/   
       - run:
           name: Get backend url
           command: |
@@ -338,6 +340,8 @@ jobs:
       # attach workspace
       - attach_workspace:
           at: ~/
+      - restore_cache:
+          keys: [backendded-build]    
       - run:
           name: Install dependencies
           command: |
@@ -353,8 +357,8 @@ jobs:
           command: |
             # your code here
             cd backend
-            npm i
-            npm run build
+            # npm i
+            # npm run build
             cd ..
             # Zip the directory
             tar -C backend -czvf artifact.tar.gz .
