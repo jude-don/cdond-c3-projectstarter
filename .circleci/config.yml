@@ -388,7 +388,7 @@ jobs:
             apk add --no-cache python3 py3-pip \
               && pip3 install --upgrade pip \
               && pip install awscli
-      - create-dotenv-file            
+      # - create-dotenv-file            
       # - run:
       #     name: Get backend url
       #     command: |
