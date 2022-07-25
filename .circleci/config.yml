@@ -54,10 +54,10 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = $(curl --insecure "https://kvdb.io/9ki2ESz1xv4oMpXk4MkFda/migration_${CIRCLE_WORKFLOW_ID:0:7}")
+            SUCCESS = $(curl "https://kvdb.io/9ki2ESz1xv4oMpXk4MkFda//migration_${CIRCLE_WORKFLOW_ID:0:7}")
             if(( $SUCCESS==1 )); 
             then
-              cd ~/project/backend
+              cd backend
               npm install
               npm run migrations:revert
             fi
@@ -211,6 +211,7 @@ jobs:
           command: |
             yum install -y tar gzip
             aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
+            
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -277,7 +278,9 @@ jobs:
             # Your code here
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl https://kvdb.io/9ki2ESz1xv4oMpXk4MkFda/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+              curl https://kvdb.io/9ki2ESz1xv4oMpXk4MkFda/migration_${CIRCLE_WORKFLOW_ID:0:7} \ -d "1"
+            else
+              curl https://kvdb.io/9ki2ESz1xv4oMpXk4MkFda/migration_${CIRCLE_WORKFLOW_ID:0:7} \ -d "0"
             fi
       - destroy-environment
       # Here's where you will add some code to rollback on failure
@@ -373,7 +376,7 @@ jobs:
 
   smoke-test:
     docker:
-      - image: alpine:latest 
+      - image: python:3.7-alpine3.11 
     steps:
       # Checkout code from git
       - checkout
@@ -402,12 +405,12 @@ jobs:
             # BACKEND_IP=$(curl -H "token: 7933fe63-4687-4fa1-8426-aa25aa1730ec" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
             API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            curl -s "${API_URL}/api/status" -v
+            curl "${API_URL}/api/status"
       - run:
           name: Frontend smoke test.
           command: |
             # your code here
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"
             echo ${URL}
             if curl -s ${URL} | grep "Welcome"
             then 
@@ -419,40 +422,74 @@ jobs:
       - destroy-environment 
       - revert-migrations  
 
-#   cloudfront-update:
-#     docker:
-#       # Docker image here that supports AWS CLI
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Update cloudfront distribution
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
+  cloudfront-update:
+    docker:
+      # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+            yum install -y tar gzip curl
+            curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+            yum install -y nodejs
 
-# cleanup:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Get old stack workflow id
-#           command: |
-#             # your code here
-#             export OldWorkflowID="the id here"
-#             export STACKS=[] #put the list of stacks here
-#       - run:
-#           name: Remove old stacks and files
-#           command: |
-#             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-#             then
-#               # your code here
-#             fi
+      - run:
+          name: get old workflow for clean
+          command: |
+            OldWorkflowID=$(aws cloudformation \
+            list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+            --no-paginate --output text)
+            curl https://kvdb.io/9ki2ESz1xv4oMpXk4MkFda//migration_${CIRCLE_WORKFLOW_ID:0:7} \
+            -d "$OldWorkflowID"
+
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            # your code here
+            aws cloudformation deploy \
+            --template-file .circleci/files/cloudfront.yml \
+            --stack-name InitialStack \
+            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+            --tags project=udapeople
+      # Here's where you will add some code to rollback on failure  
+      - destroy-environment 
+      - revert-migrations 
+
+cleanup:
+    docker:
+      # Docker image here
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+      - run:
+          name: Get old stack workflow id
+          command: |
             
+      - run:
+          name: Remove old stacks and files
+          command: |
+            # NEW_WORKFLOW_ID=${CIRCLE_WORKFLOW_ID:0:7}
+            # echo "NEW_WORKFLOW_ID = $NEW_WORKFLOW_ID"
+            if [-Z "$OldWorkflowID" ]
+            then
+              echo "No OLD_WORKFLOW_ID found, nothing to cleanup"
+            else
+              if [[ "$NEW_WORKFLOW_ID" != "$OldWorkflowID" ]]
+              then
+                echo "$OldWorkflowID!=$NEW_WORKFLOW_ID => will delete old version"
+                aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+                aws cloudformation delete-stack --stack-name udapeople-frontend-${OldWorkflowID}
+                aws cloudformation delete-stack --stack-name udapeople-backend-${OldWorkflowID}
+              fi
+            fi
+
+
+
 
 workflows:
   default:
@@ -498,3 +535,11 @@ workflows:
           requires: 
               - deploy-backend 
               - deploy-frontend
+
+      - cloudfront-update:
+          requires:
+              - smoke-test
+
+      - cleanup:
+          requires:
+              -cloudfront-update
