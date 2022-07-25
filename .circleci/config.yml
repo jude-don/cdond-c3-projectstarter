@@ -398,7 +398,8 @@ jobs:
           name: Backend smoke test.
           command: |
             # your code here
-            BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            # BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            BACKEND_IP=$(curl -H "token: 7933fe63-4687-4fa1-8426-aa25aa1730ec" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
             API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             curl -s "${API_URL}/api/status" -v
