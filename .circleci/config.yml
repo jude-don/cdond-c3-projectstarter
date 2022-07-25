@@ -416,7 +416,7 @@ jobs:
             echo ${URL}
             if curl -s ${URL} | grep "Welcome"
             then 
-              exit 1 
+              exit 0 
             else
               exit 1
             fi
@@ -445,8 +445,7 @@ jobs:
             OldWorkflowID=$(aws cloudformation \
             list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
             --no-paginate --output text)
-            curl https://kvdb.io/9ki2ESz1xv4oMpXk4MkFda//migration_${CIRCLE_WORKFLOW_ID:0:7} \
-            -d "$OldWorkflowID"
+            curl https://kvdb.io/9ki2ESz1xv4oMpXk4MkFda/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "$OldWorkflowID"
 
       - run:
           name: Update cloudfront distribution
