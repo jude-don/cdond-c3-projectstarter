@@ -426,7 +426,6 @@ jobs:
 
   cloudfront-update:
     docker:
-      # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
     steps:
       # Checkout code from git
@@ -442,9 +441,9 @@ jobs:
       - run:
           name: get old workflow for clean
           command: |
-            OldWorkflowID=$(aws cloudformation \
-            list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-            --no-paginate --output text)
+            export OldWorkflowID=$(aws cloudformation \
+                    list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                    --no-paginate --output text)
             curl https://kvdb.io/9ki2ESz1xv4oMpXk4MkFda/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "$OldWorkflowID"
 
       - run:
@@ -476,6 +475,10 @@ jobs:
             command: |
               # NEW_WORKFLOW_ID=${CIRCLE_WORKFLOW_ID:0:7}
               # echo "NEW_WORKFLOW_ID = $NEW_WORKFLOW_ID"
+              export OldWorkflowID=$(aws cloudformation \
+                      list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                      --no-paginate --output text)
+              echo OldWorkflowID: "${OldWorkflowID}"
               if [-Z "$OldWorkflowID" ]
               then
                 echo "No OLD_WORKFLOW_ID found, nothing to cleanup"
