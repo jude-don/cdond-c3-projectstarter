@@ -469,12 +469,13 @@ jobs:
         - run:
             name: Remove old stacks and files
             command: |
-              # NEW_WORKFLOW_ID=${CIRCLE_WORKFLOW_ID:0:7}
               # echo "NEW_WORKFLOW_ID = $NEW_WORKFLOW_ID"
               export OldWorkflowID=$(aws cloudformation \
                       list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                       --no-paginate --output text)
-              echo OldWorkflowID: "${OldWorkflowID}"
+              NEW_WORKFLOW_ID=${CIRCLE_WORKFLOW_ID:0:7}
+              echo OldWorkflowID: " This is the old work flow id - ${OldWorkflowID}"
+              echo "This is the new worklow id - ${NEW_WORKFLOW_ID}"
               if [-Z "$OldWorkflowID" ]
               then
                 echo "No OLD_WORKFLOW_ID found, nothing to cleanup"
@@ -485,6 +486,8 @@ jobs:
                   aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
                   aws cloudformation delete-stack --stack-name udapeople-frontend-${OldWorkflowID}
                   aws cloudformation delete-stack --stack-name udapeople-backend-${OldWorkflowID}
+                else
+                  echo "$OLD_WORKFLOW_ID == $NEW_WORKFLOW_ID: the old and new stacks are the same, no changes applied"
                 fi
               fi
 
