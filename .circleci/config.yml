@@ -442,7 +442,7 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            your code here
+            #your code here
             # BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             # BACKEND_IP = curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/Backend_ip
             # API_URL="http://${BACKEND_IP}:3030"
