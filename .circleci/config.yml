@@ -231,7 +231,7 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            yum install -y tar gzip
+            # yum install -y tar gzip
             aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
             
