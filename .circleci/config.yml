@@ -256,7 +256,7 @@ jobs:
     steps:
       - checkout
       - install_awscli
-      - install ansible
+      - install_ansible
       # Add ssh keys with fingerprint
       - add_ssh_keys:
           fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
