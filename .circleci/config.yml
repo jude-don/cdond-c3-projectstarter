@@ -259,7 +259,7 @@ jobs:
       - install_ansible
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["3e:ae:4d:3f:18:28:3f:2e:a5:d5:03:b5:49:fe:65:90"] # You can get this ID in the section where you registered the SSH Key
       # attach workspace
       - attach_workspace:
           at: ~/
@@ -371,7 +371,7 @@ jobs:
       - install_ansible
       - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["3e:ae:4d:3f:18:28:3f:2e:a5:d5:03:b5:49:fe:65:90"] # You can get this ID in the section where you registered the SSH Key
       # attach workspace
       # Add ssh keys with fingerprint
       # attach workspace
@@ -424,6 +424,7 @@ jobs:
       - install_nodejs
       - attach_workspace:
           at: ~/
+      - create-dotenv-file 
       # - run:
       #     name: Install dependencies
       #     command: |
@@ -443,16 +444,16 @@ jobs:
           name: Backend smoke test.
           command: |
             #your code here
-            # BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             # BACKEND_IP = curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/Backend_ip
-            # API_URL="http://${BACKEND_IP}:3030"
-            # echo "${API_URL}"
-            # if curl -s "${API_URL}/api/status" | grep "ok"
-            # then 
-            #   exit 0
-            # else
-            #   exit 1
-            # fi
+            API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            if curl -s "${API_URL}/api/status" | grep "ok"
+            then 
+              exit 0
+            else
+              exit 1
+            fi
             echo "Well done my boy"
 
       - run:
@@ -523,14 +524,20 @@ jobs:
             name: Remove old stacks and files
             command: |
               # echo "NEW_WORKFLOW_ID = $NEW_WORKFLOW_ID"
-              export STACKS=($(aws cloudformation list-stacks \
-                --query "StackSummaries[*].StackName" \
-                --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+              # export STACKS=($(aws cloudformation list-stacks \
+              #   --query "StackSummaries[*].StackName" \
+              #   --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
 
-              echo Stack names: "${STACKS[@]}"
-              export OldWorkflowID=$(curl --insecure https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/old_workflow_id)
-              echo Old Workflow ID: $OldWorkflowID
-              if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+              export OldWorkflowID=$(aws cloudformation \
+                      list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                      --no-paginate --output text)
+
+              echo OldWorkflowID: "${OldWorkflowID}"
+              echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
+
+              # echo Stack names: "${STACKS[@]}"
+              # export OldWorkflowID=$(curl --insecure https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/old_workflow_id)
+              if [[ "${CIRCLE_WORKFLOW_ID:0:7}" =~ "${OldWorkflowID}" ]]
               then
                 aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
                 aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
