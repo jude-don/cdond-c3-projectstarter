@@ -281,12 +281,12 @@ jobs:
 
   run-migrations:
     docker:
-      - image: sleavely/node-awscli:14.x
-      # - image: cimg/node:13.8.0
+      # - image: sleavely/node-awscli:14.x
+      - image: cimg/node:13.8.0
     steps:
       # Checkout code from git
       - checkout
-      # - install_awscli
+      - install_awscli
       - restore_cache:
           keys: [backendded-build]      
       - attach_workspace:
@@ -296,8 +296,8 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm i
-            npm run build
+            npm install
+            # npm run build
             npm run migrations > migrations_dump.txt
       - run:
           name: Send migration results to kvdb.io
