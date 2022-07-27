@@ -1,69 +1,4 @@
-
-# ---
-# - name: Upgrade npm
-#   become: true
-#   shell: |
-#     npm install -g npm@latest
-  
-# - name: Copy compiled files
-#   unarchive:
-#     src: /root/project/backend.tar.gz
-#     dest: /home/ubuntu/
-
-# - name: Build backend
-#   ignore_errors: yes
-#   shell: |
-#     cd /home/ubuntu/backend
-#     npm i
-#     npm run build
-# - name: Stop and delete already running server
-#   ignore_errors: yes
-#   shell: |
-#     pm2 stop backend
-#     pm2 delete backend
-# - name: Start server
-#   become: true
-#   shell: |
-#     cd /home/ubuntu/backend
-#     pm2 start npm --name backend -- start
-#     pm2 ls
-# ---
-# - name: "Creates backend app directory"
-#   file:
-#     path: ~/backend-app
-#     state: directory
-
-# - name: "Unarchive backend files"
-#   unarchive:
-#     src: artifact.tar.gz
-#     dest: ~/backend-app
-
-# - name: "Installing Node Dependencies"
-#   shell: |
-#     cd ~/backend-app
-#     npm i
-# - name: "Executing Node app with PM2"
-#   shell: |
-#     cd ~/backend-app/dist
-#     pm2 stop default
-#     pm2 start main.js
-#   register: execute_node
-
-# - name: print message
-#   debug:
-#     msg: "{{ execute_node.stdout_lines }}"
-
-# - name: "Configure pm2 to start as service"
-#   become: true
-#   shell: |
-#     env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
-
-
 ---
-# - name: Get TYPEORM into env
-#   become: yes
-#   shell: |
-#     echo 'export TYPEORM_HOST=$(grep "TYPEORM_HOST" /home/ubuntu/.env | cut -d"=" -f2)' >> ~/.bashrc
 - name: 'update and upgrade packages.'
   become: yes
   apt:
@@ -92,24 +27,9 @@
   unarchive:
     src: files/artifact.tar.gz
     dest: .
+
 - name: start app
   become: yes
   shell: |
-    npm run migrations
     pm2 delete all
-    export $(grep TYPEORM_HOST /home/ubuntu/.env) && pm2 start npm -- start
-- name: check env vars
-  shell: cat /home/ubuntu/.env
-  register: myecho
-- name: check pm2 log
-  become: yes
-  shell: pm2 logs --nostream
-  register: pm2Log
-- name: Debug command
-  debug:
-    var: myecho
-    verbosity: 2
-- name: Show PM2 log
-  debug:
-    var: pm2Log
-    verbosity: 2
+    pm2 start npm -- start
