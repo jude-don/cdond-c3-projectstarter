@@ -276,8 +276,8 @@ jobs:
 
   run-migrations:
     docker:
-      # - image: sleavely/node-awscli:14.x
-      - image: cimg/node:13.8.0
+      - image: sleavely/node-awscli:14.x
+      # - image: cimg/node:13.8.0
     steps:
       # Checkout code from git
       - checkout
@@ -291,7 +291,7 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm install
+            npm i
             npm run build
             npm run migrations > migrations_dump.txt
       - run:
