@@ -264,10 +264,20 @@ jobs:
       # attach workspace
       - attach_workspace:
           at: ~/
-      - create-dotenv-file
+      # - create-dotenv-file
       - run:
           name: Configure server
           command: |
+            echo ENVIRONMENT=production > backend/.env
+            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/.env
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env
+            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/.env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> backend/.env
+            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> backend/.env
+            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> backend/.env
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
+            echo TYPEORM_PORT=$TYPEORM_PORT >> backend/.env
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
             cat backend/.env
             cd .circleci/ansible
             cat inventory.txt
@@ -323,7 +333,7 @@ jobs:
           keys: [backendded-build]      
       - attach_workspace:
           at: ~/
-      - create-dotenv-file   
+      # - create-dotenv-file   
       - run:
           name: Run migrations
           command: |
@@ -427,22 +437,20 @@ jobs:
             # pip install awscli
             cd backend 
             npm install
-      - create-dotenv-file
+      # - create-dotenv-file
       - run: 
           name: Package Backend
           command: |
             cd backend
             npm run build
-            tar -czf artifact.tar.gz dist/* package*
             cd ..
-            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
+            tar -C backend -czvf artifact.tar.gz .
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
 
       - run:
           name: Deploy backend
           command: |
-            export TYPEORM_MIGRATIONS_DIR=./migrations
-            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
-            export TYPEORM_MIGRATIONS=./migrations/*.ts
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml            
@@ -457,15 +465,16 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
-      - install_awscli
-      - install_nodejs
-      - attach_workspace:
-          at: ~/
-      - create-dotenv-file 
-      # - run:
-      #     name: Install dependencies
-      #     command: |
-      #       # your code here
+      # - install_awscli
+      # - install_nodejs
+      # - attach_workspace:
+      #     at: ~/
+      # - create-dotenv-file 
+      - run:
+          name: Install dependencies
+          command: |
+             apk add --update --no-cache curl aws-cli nodejs npm
+            # your code here
       #       apk --no-cache add curl
       #       apk add --update npm
       #       apk add --no-cache python3 py3-pip \
@@ -481,11 +490,11 @@ jobs:
           name: Backend smoke test.
           command: |
             #your code here
-            BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             # BACKEND_IP = curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/Backend_ip
             export API_URL="http://${BACKEND_IP}:3030"
             echo $API_URL
-            if curl --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
+            if curl -s --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
             # if curl -s "${API_URL}/api/status" | grep "ok"
             # then 
             #   exit 0
