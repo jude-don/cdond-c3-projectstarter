@@ -281,7 +281,7 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
-      - install_awscli
+      # - install_awscli
       - restore_cache:
           keys: [backendded-build]      
       - attach_workspace:
@@ -300,9 +300,9 @@ jobs:
             # Your code here
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
+              curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "1"
             else
-              curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '0'
+              curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "0"
             fi
       - destroy-environment
       # Here's where you will add some code to rollback on failure
