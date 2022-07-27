@@ -1,28 +1,59 @@
 
----
-- name: Upgrade npm
-  become: true
-  shell: |
-    npm install -g npm@latest
-- name: Copy compiled files
-  unarchive:
-    src: /root/project/backend.tar.gz
-    dest: /home/ubuntu/
+# ---
+# - name: Upgrade npm
+#   become: true
+#   shell: |
+#     npm install -g npm@latest
+  
+# - name: Copy compiled files
+#   unarchive:
+#     src: /root/project/backend.tar.gz
+#     dest: /home/ubuntu/
 
-- name: Build backend
-  ignore_errors: yes
+# - name: Build backend
+#   ignore_errors: yes
+#   shell: |
+#     cd /home/ubuntu/backend
+#     npm i
+#     npm run build
+# - name: Stop and delete already running server
+#   ignore_errors: yes
+#   shell: |
+#     pm2 stop backend
+#     pm2 delete backend
+# - name: Start server
+#   become: true
+#   shell: |
+#     cd /home/ubuntu/backend
+#     pm2 start npm --name backend -- start
+#     pm2 ls
+---
+- name: "Creates backend app directory"
+  file:
+    path: ~/backend-app
+    state: directory
+
+- name: "Unarchive backend files"
+  unarchive:
+    src: artifact.tar.gz
+    dest: ~/backend-app
+
+- name: "Installing Node Dependencies"
   shell: |
-    cd /home/ubuntu/backend
+    cd ~/backend-app
     npm i
-    npm run build
-- name: Stop and delete already running server
-  ignore_errors: yes
+- name: "Executing Node app with PM2"
   shell: |
-    pm2 stop backend
-    pm2 delete backend
-- name: Start server
+    cd ~/backend-app/dist
+    pm2 stop default
+    pm2 start main.js
+  register: execute_node
+
+- name: print message
+  debug:
+    msg: "{{ execute_node.stdout_lines }}"
+
+- name: "Configure pm2 to start as service"
   become: true
   shell: |
-    cd /home/ubuntu/backend
-    pm2 start npm --name backend -- start
-    pm2 ls
+    env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
