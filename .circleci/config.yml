@@ -19,9 +19,7 @@ commands:
       - run:
           name: Install AWS CLI v2
           command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+            pip install awscli
 
   install_ansible:
     description: Install Ansible
@@ -113,7 +111,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-cache]
+          keys: [backend-cache-ed]
       - run:
           name: Back-end build
           command: |
@@ -122,7 +120,7 @@ jobs:
              npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-cache
+          key: backend-cache-ed
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -158,7 +156,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-cache]
+          keys: [backend-cache-ed]
       - run: 
           name: Run backend test
           command: |
@@ -195,7 +193,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-cache]
+          keys: [backend-cache-ed]
       - run: 
           name: Scan backend 
           command: |
@@ -253,7 +251,7 @@ jobs:
               # --filters "Name=tag:project,Values=udapeople" \   
   configure-infrastructure:
     docker:
-      - image: cimg/base:stable
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
       - install_awscli
@@ -289,7 +287,7 @@ jobs:
       - checkout
       - install_awscli
       - restore_cache:
-          keys: [backend-cache]      
+          keys: [backend-cache-ed]      
       - attach_workspace:
           at: ~/
       - create-dotenv-file   
@@ -317,11 +315,11 @@ jobs:
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI       
-      - image: cimg/base:stable
+      - image: amazon/aws-cli
     steps:
       # Checkout code from git
       - checkout
-      - install_awscli
+      # - install_awscli
       - install_nodejs
       - restore_cache:
           keys: [frontend-build]
@@ -367,7 +365,7 @@ jobs:
   deploy-backend:
     docker:
       # Docker image here that supports Ansible
-      - image: cimg/base:stable
+      - image: python:3.7-alpine3.11
       # - image: cimg/base:stable
 
     steps:
@@ -382,7 +380,7 @@ jobs:
       # Add ssh keys with fingerprint
       # attach workspace
       - restore_cache:
-          keys: [backend-cache] 
+          keys: [backend-cache-ed] 
       - attach_workspace:
           at: ~/ 
       - run:
@@ -396,7 +394,7 @@ jobs:
             # pip install awscli
             cd backend 
             npm install
-      # - create-dotenv-file
+      - create-dotenv-file
       - run: 
           name: Package Backend
           command: |
