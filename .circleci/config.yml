@@ -263,14 +263,19 @@ jobs:
       # attach workspace
       - attach_workspace:
           at: ~/
-      # - create-dotenv-file
+      - create-dotenv-file
       - run:
           name: Configure server
           command: |
+            cat backend/.env
             cd .circleci/ansible
             cat inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=false
             ansible-playbook -i inventory.txt configure-server.yml
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/backend
       # Here's where you will add some code to rollback on failure
       - destroy-environment      
 
@@ -375,10 +380,10 @@ jobs:
       # attach workspace
       # Add ssh keys with fingerprint
       # attach workspace
-      - attach_workspace:
-          at: ~/
       - restore_cache:
-          keys: [backendded-build]    
+          keys: [backendded-build] 
+      - attach_workspace:
+          at: ~/ 
       - run:
           name: Install dependencies
           command: |
@@ -415,8 +420,8 @@ jobs:
 
   smoke-test:
     docker:
-      # - image: python:3.7-alpine3.11
-      - image: cimg/base:stable 
+      - image: python:3.7-alpine3.11
+      # - image: cimg/base:stable 
     steps:
       # Checkout code from git
       - checkout
@@ -446,8 +451,9 @@ jobs:
             #your code here
             BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             # BACKEND_IP = curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/Backend_ip
-            API_URL="http://${BACKEND_IP}:3030"
+            export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
+            #if curl - -connect-timeout 5 -s "${API_URL}/api/status" | grep "ok"; then return 0; else return 1; fi
             if curl -s "${API_URL}/api/status" | grep "ok"
             then 
               exit 0
@@ -460,7 +466,7 @@ jobs:
           name: Frontend smoke test.
           command: |
             # your code here
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-${AWS_DEFAULT_REGION}.amazonaws.com/#/employees"
             echo ${URL}
             if curl -s ${URL} | grep "Welcome"
             then 
