@@ -511,13 +511,13 @@ jobs:
             # # BACKEND_IP = curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/Backend_ip
             export API_URL="http://${BACKEND_IP}:3030"
             echo $API_URL
-            if curl -s --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
-            # # if curl -s "${API_URL}/api/status" | grep "ok"
-            # # then 
-            # #   exit 0
-            # # else
-            # #   exit 1
-            # # fi
+            # if curl -s --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
+            if curl -s "${API_URL}/api/status" | grep "ok"
+            then 
+              exit 0
+            else
+              exit 1
+            fi
             echo "Well done my boy"
 
       - run:
