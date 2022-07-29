@@ -483,20 +483,20 @@ jobs:
 
   smoke-test:
     docker:
-      - image: python:3.7-alpine3.11
-      # - image: cimg/base:stable 
+      # - image: python:3.7-alpine3.11
+      - image: cimg/base:stable 
     steps:
       # Checkout code from git
       - checkout
-      # - install_awscli
-      # - install_nodejs
+      - install_awscli
+      - install_nodejs
       # - attach_workspace:
       #     at: ~/
       # - create-dotenv-file 
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update --no-cache curl aws-cli nodejs npm
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       apk add --update --no-cache curl aws-cli nodejs npm
       # - create-dotenv-file            
       # - run:
       #     name: Get backend url
