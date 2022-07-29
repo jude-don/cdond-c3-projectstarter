@@ -113,7 +113,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-cached]
+          keys: [backend-build]
       - run:
           name: Back-end build
           command: |
@@ -122,7 +122,7 @@ jobs:
              npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-cached
+          key: backend-build
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -142,7 +142,6 @@ jobs:
           command: |
             cd frontend
             npm install
-            npm update
             npm run test
       - slack/notify:
           event: fail
@@ -158,7 +157,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-cached]
+          keys: [backend-build]
       - run: 
           name: Run backend test
           command: |
@@ -185,6 +184,8 @@ jobs:
             cd frontend
             npm install
             npm audit fix --audit-level=critical --force
+            npm audit fix --audit-level=critical --force
+            npm audit --audit-level=critical
       # Checkout code from git
       # Restore from cache
       # Your job code here
@@ -195,13 +196,15 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-cached]
+          keys: [backend-build]
       - run: 
           name: Scan backend 
           command: |
             cd backend
             npm install
             npm audit fix --audit-level=critical --force
+            npm audit fix --audit-level=critical --force
+            npm audit --audit-level=critical
       # Checkout code from git
       # Restore from cache
       # Your job code here
@@ -233,19 +236,17 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             # yum install -y tar gzip
-            aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
-            cat .circleci/ansible/inventory.txt
-            
+            echo $(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text) >> ~/project/.circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt     
       - slack/notify:
           event: fail
           template: basic_fail_1
       - slack/notify:
           event: pass
           template: success_tagged_deploy_1 
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure fhgh hfh
       - destroy-environment      
 
@@ -253,15 +254,19 @@ jobs:
               # --filters "Name=tag:project,Values=udapeople" \   
   configure-infrastructure:
     docker:
-      - image: cimg/base:stable
+      - image: python:3.7-alpine3.16
     steps:
       - checkout
-      - install_awscli
-      - install_ansible
+      # - install_awscli
+      # - install_ansible
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["3e:ae:4d:3f:18:28:3f:2e:a5:d5:03:b5:49:fe:65:90"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
       # attach workspace
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update --no-cache tar gzip ansible aws-cli
       - attach_workspace:
           at: ~/
       # - create-dotenv-file
@@ -280,7 +285,6 @@ jobs:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
             cat backend/.env
             cd .circleci/ansible
-            cat inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=false
             ansible-playbook -i inventory.txt configure-server.yml
       - persist_to_workspace:
@@ -299,7 +303,7 @@ jobs:
   #     - checkout
   #     - install_awscli
   #     - restore_cache:
-  #         keys: [backend-cached]      
+  #         keys: [backend-build]      
   #     - attach_workspace:
   #         at: ~/
   #     - create-dotenv-file   
@@ -329,6 +333,13 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt install -y tar gzip curl
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -qq awscliv2.zip
+            sudo ./aws/install
       - restore_cache:
           keys: [backendded-build]      
       - attach_workspace:
@@ -338,8 +349,8 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm i
-            npm run build
+            # npm i
+            # npm run build
             npm run migrations > migrations_dump.txt
       - run:
           name: Send migration results to kvdb.io
@@ -347,9 +358,9 @@ jobs:
             # Your code here
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "1"
+              curl --insecure https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "1"
             else
-              curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "0"
+              curl --insecure https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "0"
             fi
       - destroy-environment
 
@@ -358,27 +369,27 @@ jobs:
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI       
-      - image: cimg/base:stable
+      - image: python:3.7-alpine3.16
     steps:
       # Checkout code from git
       - checkout
-      - install_awscli
-      - install_nodejs
-      - restore_cache:
-          keys: [frontend-build]
-   
+      # - install_awscli
+      # - install_nodejs
       - run:
           name: Install dependencies
           command: |
-            # your code here
-            # yum install -y tar gzip
-            # curl -sL https://rpm.nodesource.com/setup_10.x | bash -
-            # yum install -y nodejs
-            cd frontend
-            npm install
-
-      # - attach_workspace:
-      #     at: ~/   
+            apk add --update --no-cache tar gzip nodejs npm aws-cli
+      - restore_cache:
+          keys: [frontend-build]
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       # your code here
+      #       # yum install -y tar gzip
+      #       # curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+      #       # yum install -y nodejs
+      #       cd frontend
+      #       npm install
       - run:
           name: Get backend url
           command: |
@@ -394,13 +405,14 @@ jobs:
           command: |
             # your code here
             cd frontend
+            npm install
             npm run build
-            # tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./frontend/dist
+      # - persist_to_workspace:
+      #     root: .
+      #     paths:
+      #       - ./frontend/dist
       # Here's where you will add some code to rollback on failure
       - destroy-environment 
       - revert-migrations        
@@ -408,51 +420,62 @@ jobs:
   deploy-backend:
     docker:
       # # Docker image here that supports Ansible
-      # - image: python:3.7-alpine3.11
-      - image: cimg/base:stable
+      - image: python:3.7-alpine3.11
+      # - image: cimg/base:stable
 
     steps:
       # Checkout code from git
       - checkout
-      - install_awscli
-      - install_ansible
-      - install_nodejs
+      # - install_awscli
+      # - install_ansible
+      # - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["3e:ae:4d:3f:18:28:3f:2e:a5:d5:03:b5:49:fe:65:90"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
       # attach workspace
       # Add ssh keys with fingerprint
       # attach workspace
-      - restore_cache:
-          keys: [backend-cached] 
-      - attach_workspace:
-          at: ~/ 
       - run:
           name: Install dependencies
           command: |
-            # your code here
-            # apk add --update ansible
-            # apk add --no-cache curl
-            # apk add --no-cache openssh-client
-            # apk add --no-cache --upgrade bash
-            # pip install awscli
-            cd backend 
-            npm install
+            apk add --update --no-cache tar gzip nodejs npm aws-cli ansible
+      - restore_cache:
+          keys: [backend-build] 
+      - attach_workspace:
+          at: ~/ 
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       # your code here
+      #       # apk add --update ansible
+      #       # apk add --no-cache curl
+      #       # apk add --no-cache openssh-client
+      #       # apk add --no-cache --upgrade bash
+      #       # pip install awscli
+      #       cd backend 
+      #       npm install
       # - create-dotenv-file
-      - run: 
-          name: Package Backend
+      # - run: 
+      #     name: Package Backend
+      #     command: |
+      #       cd backend
+      #       npm run build
+      #       cd ..
+      #       tar -C backend -czvf artifact.tar.gz .
+      #       mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+      #       mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+
+      - run:
+          name: Deploy backend
           command: |
             cd backend
+            npm install
             npm run build
             cd ..
             tar -C backend -czvf artifact.tar.gz .
             mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
             mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
-
-      - run:
-          name: Deploy backend
-          command: |
             cd .circleci/ansible
-            cat inventory.txt
+            echo "Contents of the inventory.txt file is ------$(cat inventory.txt)"
             ansible-playbook -i inventory.txt deploy-backend.yml            
       # Here's where you will add some code to rollback on failure 
       - destroy-environment 
@@ -460,26 +483,20 @@ jobs:
 
   smoke-test:
     docker:
-      # - image: python:3.7-alpine3.11
-      - image: cimg/base:stable 
+      - image: python:3.7-alpine3.11
+      # - image: cimg/base:stable 
     steps:
       # Checkout code from git
       - checkout
-      - install_awscli
-      - install_nodejs
+      # - install_awscli
+      # - install_nodejs
       # - attach_workspace:
       #     at: ~/
       # - create-dotenv-file 
-      # - run:
-      #     name: Install dependencies
-      #     command: |
-      #        apk add --update --no-cache curl aws-cli nodejs npm
-            # your code here
-      #       apk --no-cache add curl
-      #       apk add --update npm
-      #       apk add --no-cache python3 py3-pip \
-      #         && pip3 install --upgrade pip \
-      #         && pip install awscli
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update --no-cache curl aws-cli nodejs npm
       # - create-dotenv-file            
       # - run:
       #     name: Get backend url
@@ -490,11 +507,11 @@ jobs:
           name: Backend smoke test.
           command: |
             #your code here
-            # export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             # # BACKEND_IP = curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/Backend_ip
-            # export API_URL="http://${BACKEND_IP}:3030"
-            # echo $API_URL
-            # if curl -s --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo $API_URL
+            if curl -s --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
             # # if curl -s "${API_URL}/api/status" | grep "ok"
             # # then 
             # #   exit 0
@@ -507,7 +524,7 @@ jobs:
           name: Frontend smoke test.
           command: |
             # your code here
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-${AWS_DEFAULT_REGION}.amazonaws.com/#/employees"
+            export URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-${AWS_DEFAULT_REGION}.amazonaws.com/#/employees"
             echo ${URL}
             if curl -s ${URL} | grep "Welcome"
             then 
@@ -521,19 +538,20 @@ jobs:
 
   cloudfront-update:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/node:13.8.0
     steps:
       # Checkout code from git
       - checkout
-      - install_awscli
-      - install_nodejs
-      # - run:
-      #     name: Install dependencies
-      #     command: |
-      #       # your code here
-      #       yum install -y tar gzip curl
-      #       curl -sL https://rpm.nodesource.com/setup_10.x | bash -
-      #       yum install -y nodejs
+      # - install_awscli
+      # - install_nodejs
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+            sudo apt install -y tar gzip curl
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -qq awscliv2.zip
+            sudo ./aws/install
 
       - run:
           name: Save Old Workflow ID to kvdb.io
