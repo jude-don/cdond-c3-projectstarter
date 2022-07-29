@@ -420,24 +420,24 @@ jobs:
   deploy-backend:
     docker:
       # # Docker image here that supports Ansible
-      - image: python:3.7-alpine3.11
-      # - image: cimg/base:stable
+      # - image: python:3.7-alpine3.11
+      - image: cimg/base:stable
 
     steps:
       # Checkout code from git
       - checkout
-      # - install_awscli
-      # - install_ansible
-      # - install_nodejs
+      - install_awscli
+      - install_ansible
+      - install_nodejs
       - add_ssh_keys:
           fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
       # attach workspace
       # Add ssh keys with fingerprint
       # attach workspace
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update --no-cache tar gzip nodejs npm aws-cli ansible
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       apk add --update --no-cache tar gzip nodejs npm aws-cli ansible
       - restore_cache:
           keys: [backend-build] 
       - attach_workspace:
