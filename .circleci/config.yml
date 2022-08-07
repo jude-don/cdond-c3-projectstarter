@@ -77,7 +77,7 @@ commands:
             SUCCESS=$(curl --insecure https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_<< parameters.Workflow_ID >>)
             if(( $SUCCESS == 1 )); 
             then
-              cd backend
+              cd ~/project/backend
               npm install
               npm run migrations:revert
             fi
@@ -236,7 +236,9 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             # yum install -y tar gzip
-            echo $(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text) >> ~/project/.circleci/ansible/inventory.txt
+            cd .circleci/ansible
+            cat inventory.txt
+            aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -254,36 +256,37 @@ jobs:
               # --filters "Name=tag:project,Values=udapeople" \   
   configure-infrastructure:
     docker:
-      - image: python:3.7-alpine3.16
+      - image: cimg/base:stable
     steps:
       - checkout
       # - install_awscli
-      # - install_ansible
       # Add ssh keys with fingerprint
       - add_ssh_keys:
           fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
-      # attach workspace
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update --no-cache tar gzip ansible aws-cli
       - attach_workspace:
           at: ~/
+      # attach workspace
+      - install_ansible
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       apk add --update --no-cache tar gzip ansible aws-cli
+      
       # - create-dotenv-file
       - run:
           name: Configure server
           command: |
-            echo ENVIRONMENT=production > backend/.env
-            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/.env
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env
-            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/.env
-            echo TYPEORM_HOST=$TYPEORM_HOST >> backend/.env
-            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> backend/.env
-            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> backend/.env
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
-            echo TYPEORM_PORT=$TYPEORM_PORT >> backend/.env
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
-            cat backend/.env
+            # echo ENVIRONMENT=production > backend/.env
+            # echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/.env
+            # echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env
+            # echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/.env
+            # echo TYPEORM_HOST=$TYPEORM_HOST >> backend/.env
+            # echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> backend/.env
+            # echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> backend/.env
+            # echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
+            # echo TYPEORM_PORT=$TYPEORM_PORT >> backend/.env
+            # echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
+            # cat backend/.env
             cd .circleci/ansible
             export ANSIBLE_HOST_KEY_CHECKING=false
             ansible-playbook -i inventory.txt configure-server.yml
@@ -329,7 +332,7 @@ jobs:
 
   run-migrations:
     docker:
-      - image: cimg/node:13.8.0
+      - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
       - checkout
@@ -342,14 +345,14 @@ jobs:
             sudo ./aws/install
       - restore_cache:
           keys: [backendded-build]      
-      - attach_workspace:
-          at: ~/
+      # - attach_workspace:
+      #     at: ~/
       # - create-dotenv-file   
       - run:
           name: Run migrations
           command: |
             cd backend
-            # npm i
+            npm install
             # npm run build
             npm run migrations > migrations_dump.txt
       - run:
@@ -358,29 +361,37 @@ jobs:
             # Your code here
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl --insecure https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "1"
+              curl --insecure https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
             else
-              curl --insecure https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d "0"
+              curl --insecure https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '0'
             fi
       - destroy-environment
+      - revert-migrations
 
   
 
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI       
-      - image: python:3.7-alpine3.16
+      - image: cimg/base:stable
     steps:
       # Checkout code from git
       - checkout
       # - install_awscli
       # - install_nodejs
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update --no-cache tar gzip nodejs npm aws-cli
+      - add_ssh_keys:
+          fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"]
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       apk add --update --no-cache tar gzip nodejs npm aws-cli
       - restore_cache:
           keys: [frontend-build]
+      - attach_workspace:
+          at: ~/
+      - install_nodejs
+      - install_awscli
+      - install_ansible
       # - run:
       #     name: Install dependencies
       #     command: |
@@ -426,9 +437,6 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
-      - install_awscli
-      - install_ansible
-      - install_nodejs
       - add_ssh_keys:
           fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
       # attach workspace
@@ -442,6 +450,9 @@ jobs:
           keys: [backend-build] 
       - attach_workspace:
           at: ~/ 
+      - install_awscli
+      - install_ansible
+      - install_nodejs
       # - run:
       #     name: Install dependencies
       #     command: |
@@ -468,14 +479,21 @@ jobs:
           name: Deploy backend
           command: |
             cd backend
+
             npm install
             npm run build
             cd ..
-            tar -C backend -czvf artifact.tar.gz .
-            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
-            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
-            cd .circleci/ansible
+
+            cd .circleci/amsible
+            mkdir files
+            cd files
+            tar -C ../../../backend -czvf artifact.tar.gz .
+            cd ../
+            # mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            # mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            # cd .circleci/ansible
             echo "Contents of the inventory.txt file is ------$(cat inventory.txt)"
+            cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml            
       # Here's where you will add some code to rollback on failure 
       - destroy-environment 
@@ -488,8 +506,8 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
-      - install_awscli
       - install_nodejs
+      - install_awscli
       # - attach_workspace:
       #     at: ~/
       # - create-dotenv-file 
@@ -512,12 +530,12 @@ jobs:
             export API_URL="http://${BACKEND_IP}:3030"
             echo $API_URL
             # if curl -s --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
-            # if curl -s "${API_URL}/api/status" | grep "ok"
-            # then 
-            #   exit 0
-            # else
-            #   exit 1
-            # fi
+            if curl -s ${API_URL}/api/status | grep "ok"
+            then 
+              exit 0
+            else
+              exit 1
+            fi
             echo "Well done my boy"
 
       - run:
@@ -538,7 +556,7 @@ jobs:
 
   cloudfront-update:
     docker:
-      - image: cimg/node:13.8.0
+      - image: amazon/aws-cli
     steps:
       # Checkout code from git
       - checkout
@@ -549,16 +567,16 @@ jobs:
           command: |
             # your code here
             sudo apt install -y tar gzip curl
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip -qq awscliv2.zip
-            sudo ./aws/install
+            # curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            # unzip -qq awscliv2.zip
+            # sudo ./aws/install
 
       - run:
           name: Save Old Workflow ID to kvdb.io
           command: |
             export OLD_WORKFLOW_ID=$(aws cloudformation \
-                    list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-                    --no-paginate --output text)
+              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text)
             echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
             curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/old_workflow_id -d "${OLD_WORKFLOW_ID}"
 
