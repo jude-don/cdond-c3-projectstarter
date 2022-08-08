@@ -236,13 +236,24 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             # yum install -y tar gzip
+            # cd .circleci/ansible
+            # cat inventory.txt
+            mkdir -p /tmp/workspace
             cd .circleci/ansible
-            cat inventory.txt
-            aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
+            echo [all] > /tmp/workspace/inventory.txt
+            aws ec2 describe-instances \ 
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \ 
+            --output text >> /tmp/workspace/inventory.txt
+            cat /tmp/workspace/inventory.txt
+            
+      - run: 
+          name: Install tar utility
+          command: |
+            yum install -y tar gzip
       - persist_to_workspace:
-          root: ~/
+          root: /tmp/workspace
           paths:
-            - project/.circleci/ansible/inventory.txt     
+            - inventory.txt     
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -264,7 +275,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["dd:4d:df:be:88:24:a8:81:ee:eb:95:fb:71:da:ee:38"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
-          at: ~/
+          at: /tmp/workspace
       # attach workspace
       - install_ansible
       - install_awscli
@@ -277,20 +288,12 @@ jobs:
       - run:
           name: Configure server
           command: |
-            # echo ENVIRONMENT=production > backend/.env
-            # echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/.env
-            # echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env
-            # echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/.env
-            # echo TYPEORM_HOST=$TYPEORM_HOST >> backend/.env
-            # echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> backend/.env
-            # echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> backend/.env
-            # echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
-            # echo TYPEORM_PORT=$TYPEORM_PORT >> backend/.env
-            # echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
             # cat backend/.env
             cd .circleci/ansible
+            ls
+            cat /tmp/workspace/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=false
-            ansible-playbook -i inventory.txt configure-server.yml
+            ansible-playbook -i /tmp/workspace/inventory.txt configure-server.yml
       - persist_to_workspace:
           root: ~/
           paths:
@@ -334,6 +337,17 @@ jobs:
   run-migrations:
     docker:
       - image: circleci/node:13.8.0
+        environment:
+          TYPEORM_MIGRATIONS: $TYPEORM_MIGRATIONS
+          TYPEORM_MIGRATIONS_DIR: $TYPEORM_MIGRATIONS_DIR
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
+
     steps:
       # Checkout code from git
       - checkout
@@ -344,10 +358,10 @@ jobs:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip -qq awscliv2.zip
             sudo ./aws/install
+      - attach_workspace:
+          at: ~/
       - restore_cache:
           keys: [backendded-build]      
-      # - attach_workspace:
-      #     at: ~/
       # - create-dotenv-file   
       - run:
           name: Run migrations
@@ -406,12 +420,15 @@ jobs:
           name: Get backend url
           command: |
             # your code here
-            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            export BACKEND_IP=$(aws ec2 describe-instances \ 
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \ 
+            --output text)
             # curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/Backend_ip -d "${BACKEND_IP}"
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
             cat frontend/.env
+            
       - run:
           name: Deploy frontend objects
           command: |
@@ -451,7 +468,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["dd:4d:df:be:88:24:a8:81:ee:eb:95:fb:71:da:ee:38"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
-          at: ~/ 
+          at: /tmp/workspace
       # - run:
       #     name: Install dependencies
       #     command: |
@@ -462,21 +479,21 @@ jobs:
       - install_awscli
       - install_ansible
       - install_nodejs
-      - run:
-          name: create environment files
-          command: >
-            echo ENVIROMENT=production >> "backend/.env"
-            echo NODE_ENV=production >> "backend/.env"
-            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
-            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
-            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >>
-            "backend/.env"
-            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
-            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
-            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+      # - run:
+      #     name: create environment files
+      #     command: |
+      #       echo ENVIROMENT=production >> "backend/.env"
+      #       echo NODE_ENV=production >> "backend/.env"
+      #       echo TYPEORM_CONNECTION=postgres >> "backend/.env"
+      #       echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
+      #       echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >>
+      #       "backend/.env"
+      #       echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+      #       echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+      #       echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+      #       echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+      #       echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+      #       echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
       # - run:
       #     name: Install dependencies
       #     command: |
@@ -518,7 +535,7 @@ jobs:
             echo "Contents of the inventory.txt file is ------"
             cat inventory.txt
             # ansible-galaxy install weareinteractive.environment
-            ansible-playbook -i inventory.txt deploy-backend.yml            
+            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml            
       # Here's where you will add some code to rollback on failure 
       - destroy-environment 
       - revert-migrations   
