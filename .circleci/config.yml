@@ -540,11 +540,11 @@ jobs:
             mkdir files
             cd files
             tar -C ../../../backend -czvf artifact.tar.gz .
-            mv artifact.tar.gz /tmp
+            # mv artifact.tar.gz /tmp
             cd ../
             echo "Contents of the inventory.txt file is --------"
             cat /tmp/workspace/inventory.txt
-            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml -vv
+            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml -vvv
             #intial ended
 
 
