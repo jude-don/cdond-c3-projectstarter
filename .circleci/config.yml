@@ -520,12 +520,13 @@ jobs:
       #       tar -C backend -czvf artifact.tar.gz .
       #       mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
       #       mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
-      - run:
-          name: push ip to local file
-          command: |
-          cd .circleci/ansible
-          ls
-          aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> /.circleci/ansible/inventory.txt
+      # - run:
+      #     name: push ip to local file
+      #     command: |
+      #       cd .circleci/ansible
+      #       ls
+      #       aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> /.circleci/ansible/inventory.txt
+      #       echo invetory.txt
       - run:
           name: Deploy backend
           command: |
