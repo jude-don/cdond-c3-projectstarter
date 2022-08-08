@@ -267,6 +267,7 @@ jobs:
           at: ~/
       # attach workspace
       - install_ansible
+      - install_awscli
       # - run:
       #     name: Install dependencies
       #     command: |
@@ -479,21 +480,20 @@ jobs:
           name: Deploy backend
           command: |
             cd backend
-
-            npm install
+            npm i
             npm run build
             cd ..
-
-            cd .circleci/amsible
+            cd .circleci/ansible
             mkdir files
             cd files
-            tar -C ../../../backend -czvf artifact.tar.gz .
+            tar -C../../../backend -czvf artifact.tar.gz .
             cd ../
             # mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
             # mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             # cd .circleci/ansible
-            echo "Contents of the inventory.txt file is ------$(cat inventory.txt)"
+            echo "Contents of the inventory.txt file is ------"
             cat inventory.txt
+            # ansible-galaxy install weareinteractive.environment
             ansible-playbook -i inventory.txt deploy-backend.yml            
       # Here's where you will add some code to rollback on failure 
       - destroy-environment 
