@@ -292,10 +292,10 @@ jobs:
             cat /tmp/workspace/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=false
             ansible-playbook -i /tmp/workspace/inventory.txt configure-server.yml
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/backend
+      # - persist_to_workspace:
+      #     root: ~/
+      #     paths:
+      #       - project/backend
       # Here's where you will add some code to rollback on failure
       - destroy-environment      
 
@@ -522,20 +522,30 @@ jobs:
             npm i
             npm run build
             cd ..
-            tar -C backend -czvf artifact.tar.gz .
-            mv artifact.tar.gz /tmp
-      - run:
-          name: run ansible playbook
-          command: |
+            #intial
             cd .circleci/ansible
-            echo "Contents of the inventory.txt file is ------"
+            mkdir files
+            cd files
+            tar -C ../../../backend -czvf artifact.tar.gz .
+            cd ../
+            echo "Contents of the inventory.txt file is --------"
             cat /tmp/workspace/inventory.txt
-            # ansible-galaxy install weareinteractive.environment
             ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
-            # mkdir files
-            # cd files
-            # tar -C ../../../backend -czvf artifact.tar.gz .
-            # cd ../
+            #intial ended
+            # tar -C backend -czvf artifact.tar.gz .
+            # mv artifact.tar.gz /tmp
+      # - run:
+      #     name: run ansible playbook
+      #     command: |
+      #       cd .circleci/ansible
+      #       echo "Contents of the inventory.txt file is ------"
+      #       cat /tmp/workspace/inventory.txt
+      #       # ansible-galaxy install weareinteractive.environment
+      #       ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
+      #       # mkdir files
+      #       # cd files
+      #       # tar -C ../../../backend -czvf artifact.tar.gz .
+      #       # cd ../
                         
       # Here's where you will add some code to rollback on failure 
       - destroy-environment 
