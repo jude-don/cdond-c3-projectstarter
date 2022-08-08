@@ -292,6 +292,12 @@ jobs:
             cat /tmp/workspace/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=false
             ansible-playbook -i /tmp/workspace/inventory.txt configure-server.yml
+      # - run:
+      #     name: push ip to local file
+      #     command: |
+      #     cd .circleci/ansible
+      #     ls
+      #     aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> /.circleci/ansible/inventory.txt
       # - persist_to_workspace:
       #     root: ~/
       #     paths:
@@ -514,7 +520,12 @@ jobs:
       #       tar -C backend -czvf artifact.tar.gz .
       #       mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
       #       mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
-
+      - run:
+          name: push ip to local file
+          command: |
+          cd .circleci/ansible
+          ls
+          aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> /.circleci/ansible/inventory.txt
       - run:
           name: Deploy backend
           command: |
@@ -523,25 +534,25 @@ jobs:
             npm run build
             cd ..
             #intial
-            cd .circleci/ansible
-            mkdir files
-            cd files
-            tar -C ../../../backend -czvf artifact.tar.gz .
-            cd ../
-            echo "Contents of the inventory.txt file is --------"
-            cat /tmp/workspace/inventory.txt
-            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
+            # cd .circleci/ansible
+            # mkdir files
+            # cd files
+            # tar -C ../../../backend -czvf artifact.tar.gz .
+            # cd ../
+            # echo "Contents of the inventory.txt file is --------"
+            # cat /tmp/workspace/inventory.txt
+            # ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
             #intial ended
-            # tar -C backend -czvf artifact.tar.gz .
+            tar -C backend -czvf artifact.tar.gz .
             # mv artifact.tar.gz /tmp
-      # - run:
-      #     name: run ansible playbook
-      #     command: |
-      #       cd .circleci/ansible
-      #       echo "Contents of the inventory.txt file is ------"
-      #       cat /tmp/workspace/inventory.txt
-      #       # ansible-galaxy install weareinteractive.environment
-      #       ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
+      - run:
+          name: run ansible playbook
+          command: |
+            cd .circleci/ansible
+            echo "Contents of the inventory.txt file is ------"
+            cat /tmp/workspace/inventory.txt
+            # ansible-galaxy install weareinteractive.environment
+            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
       #       # mkdir files
       #       # cd files
       #       # tar -C ../../../backend -czvf artifact.tar.gz .
