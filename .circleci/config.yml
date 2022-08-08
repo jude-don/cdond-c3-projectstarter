@@ -534,23 +534,28 @@ jobs:
             npm i
             npm run build
             cd ..
-            tar -C backend -czvf artifact.tar.gz .
-            mv artifact.tar.gz /tmp
-            cd .circleci/ansible
-            echo "Contents of the inventory.txt file is ------"
-            cat /tmp/workspace/inventory.txt
-            # ansible-galaxy install weareinteractive.environment
-            ansible-playbook -i /.circleci/ansible/inventory.txt deploy-backend.yml -vvv
+
             #intial
-            # cd .circleci/ansible
-            # mkdir files
-            # cd files
-            # tar -C ../../../backend -czvf artifact.tar.gz .
-            # cd ../
-            # echo "Contents of the inventory.txt file is --------"
-            # cat /tmp/workspace/inventory.txt
-            # ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
+            cd .circleci/ansible
+            mkdir files
+            cd files
+            tar -C ../../../backend -czvf artifact.tar.gz .
+            mv artifact.tar.gz /tmp
+            cd ../
+            echo "Contents of the inventory.txt file is --------"
+            cat /tmp/workspace/inventory.txt
+            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml -vv
             #intial ended
+
+
+            # tar -C backend -czvf artifact.tar.gz .
+            # mv artifact.tar.gz /tmp
+            # cd .circleci/ansible
+            # echo "Contents of the inventory.txt file is ------"
+            # cat /tmp/workspace/inventory.txt
+            # ansible-galaxy install weareinteractive.environment
+            # ansible-playbook -i /.circleci/ansible/inventory.txt deploy-backend.yml -vvv
+            
       # - run:
       #     name: run ansible playbook
       #     command: |
@@ -596,10 +601,12 @@ jobs:
             #your code here
             export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             # # BACKEND_IP = curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/Backend_ip
+            cat BACKEND_IP
             export API_URL="http://${BACKEND_IP}:3030"
             echo $API_URL
+            sleep 20s
             # if curl -s --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
-            if curl -s ${API_URL}/api/status | grep "ok"
+            if curl "${API_URL}/api/status" | grep "ok"
             then 
               exit 0
             else
