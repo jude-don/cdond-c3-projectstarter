@@ -522,18 +522,19 @@ jobs:
             npm i
             npm run build
             cd ..
+            tar -C backend -czvf artifact.tar.gz .
+            mv artifact.tar.gz /tmp
+      - run:
             cd .circleci/ansible
-            mkdir files
-            cd files
-            tar -C ../../../backend -czvf artifact.tar.gz .
-            cd ../
-            # mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
-            # mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
-            # cd .circleci/ansible
             echo "Contents of the inventory.txt file is ------"
             cat /tmp/workspace/inventory.txt
             ansible-galaxy install weareinteractive.environment
-            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml            
+            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
+            # mkdir files
+            # cd files
+            # tar -C ../../../backend -czvf artifact.tar.gz .
+            # cd ../
+                        
       # Here's where you will add some code to rollback on failure 
       - destroy-environment 
       - revert-migrations   
