@@ -545,15 +545,20 @@ jobs:
             # ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
             #intial ended
             tar -C backend -czvf artifact.tar.gz .
-            # mv artifact.tar.gz /tmp
-      - run:
-          name: run ansible playbook
-          command: |
+            mv artifact.tar.gz /tmp
             cd .circleci/ansible
             echo "Contents of the inventory.txt file is ------"
             cat /tmp/workspace/inventory.txt
             # ansible-galaxy install weareinteractive.environment
             ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
+      # - run:
+      #     name: run ansible playbook
+      #     command: |
+      #       cd .circleci/ansible
+      #       echo "Contents of the inventory.txt file is ------"
+      #       cat /tmp/workspace/inventory.txt
+      #       # ansible-galaxy install weareinteractive.environment
+      #       ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml
       #       # mkdir files
       #       # cd files
       #       # tar -C ../../../backend -czvf artifact.tar.gz .
