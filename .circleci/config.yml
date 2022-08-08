@@ -432,28 +432,51 @@ jobs:
   deploy-backend:
     docker:
       # # Docker image here that supports Ansible
-      # - image: python:3.7-alpine3.11
-      - image: cimg/base:stable
+      - image: python:3.7-alpine3.11
+      # - image: cimg/base:stable
+      environment:
+          TYPEORM_MIGRATIONS: $TYPEORM_MIGRATIONS
+          TYPEORM_MIGRATIONS_DIR: $TYPEORM_MIGRATIONS_DIR
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
 
     steps:
       # Checkout code from git
       - checkout
       - add_ssh_keys:
           fingerprints: ["dd:4d:df:be:88:24:a8:81:ee:eb:95:fb:71:da:ee:38"] # You can get this ID in the section where you registered the SSH Key
-      # attach workspace
-      # Add ssh keys with fingerprint
-      # attach workspace
+      - attach_workspace:
+          at: ~/ 
       # - run:
       #     name: Install dependencies
       #     command: |
       #       apk add --update --no-cache tar gzip nodejs npm aws-cli ansible
       - restore_cache:
           keys: [backend-build] 
-      - attach_workspace:
-          at: ~/ 
+      
       - install_awscli
       - install_ansible
       - install_nodejs
+      - run:
+          name: create environment files
+          command: >
+            echo ENVIROMENT=production >> "backend/.env"
+            echo NODE_ENV=production >> "backend/.env"
+            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >>
+            "backend/.env"
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
       # - run:
       #     name: Install dependencies
       #     command: |
@@ -483,10 +506,11 @@ jobs:
             npm i
             npm run build
             cd ..
+            tar -C backend -czvf artifact.tar.gz .
             cd .circleci/ansible
             mkdir files
             cd files
-            tar -C../../../backend -czvf artifact.tar.gz .
+            
             cd ../
             # mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
             # mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
@@ -508,8 +532,8 @@ jobs:
       - checkout
       - install_nodejs
       - install_awscli
-      # - attach_workspace:
-      #     at: ~/
+      - attach_workspace:
+          at: ~/
       # - create-dotenv-file 
       # - run:
       #     name: Install dependencies
