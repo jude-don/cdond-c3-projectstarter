@@ -262,7 +262,7 @@ jobs:
       # - install_awscli
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["dd:4d:df:be:88:24:a8:81:ee:eb:95:fb:71:da:ee:38"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
           at: ~/
       # attach workspace
@@ -381,7 +381,7 @@ jobs:
       # - install_awscli
       # - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"]
+          fingerprints: ["dd:4d:df:be:88:24:a8:81:ee:eb:95:fb:71:da:ee:38"]
       # - run:
       #     name: Install dependencies
       #     command: |
@@ -439,7 +439,7 @@ jobs:
       # Checkout code from git
       - checkout
       - add_ssh_keys:
-          fingerprints: ["7e:73:e4:d0:d7:2c:f5:3a:2f:4d:d4:fa:53:76:0e:16"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["dd:4d:df:be:88:24:a8:81:ee:eb:95:fb:71:da:ee:38"] # You can get this ID in the section where you registered the SSH Key
       # attach workspace
       # Add ssh keys with fingerprint
       # attach workspace

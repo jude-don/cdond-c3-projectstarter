@@ -1,35 +1,74 @@
 ---
-- name: 'update and upgrade packages.'
-  become: yes
-  apt:
-    upgrade: yes
-    update_cache: yes
-    cache_valid_time: 86400
-- name: remove unneeded deps
-  become: yes
-  apt:
-    autoremove: yes
-- name: install deps
-  become: yes
-  apt:
-    name: ['nodejs', 'npm']
-    state: latest
-    update_cache: yes
-- name: install pm2
-  become: yes
-  npm:
-    name: pm2
-    global: yes
-    state: latest
-    production: yes
-- name: extract artifact
-  become: yes
-  unarchive:
-    src: files/artifact.tar.gz
-    dest: .
+- name: "Creates backend app directory"
+  file: 
+    path: ~/backend-app
+    state: directory
 
-- name: start app
-  become: yes
+- name: "Unarchive backend files"
+  unarchive: 
+    src: artifact.tar.gz
+    dest: ~/backend-app
+
+- name: "Installing Node Dependencies"
   shell: |
-    pm2 delete all
-    pm2 start npm -- start
+    cd ~/backend-app
+    npm i
+
+- name: "Executing Node app with PM2"
+  shell: |
+    cd ~/backend-app/dist
+    
+    cd ../
+    npm install
+    npm run build
+    sudo npm install forever -g
+    sudo npm install ts-node -g
+    forever start -c "ts-node -r tsconfig-paths/register -r dotenv/config src/main.ts" ./
+
+    register: execute_node
+
+- name: print message
+  debug:
+    msg: "{{ execute_node.stdout_lines }}"
+
+- name: "Configure pm2 to start as service"
+  become: true 
+  shell: |
+    env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
+
+
+
+# - name: 'update and upgrade packages.'
+#   become: yes
+#   apt:
+#     upgrade: yes
+#     update_cache: yes
+#     cache_valid_time: 86400
+# - name: remove unneeded deps
+#   become: yes
+#   apt:
+#     autoremove: yes
+# - name: install deps
+#   become: yes
+#   apt:
+#     name: ['nodejs', 'npm']
+#     state: latest
+#     update_cache: yes
+# - name: install pm2
+#   become: yes
+#   npm:
+#     name: pm2
+#     global: yes
+#     state: latest
+#     production: yes
+# - name: extract artifact
+#   become: yes
+#   unarchive:
+#     src: files/artifact.tar.gz
+#     dest: .
+
+# - name: start app
+#   become: yes
+#   shell: |
+#     pm2 delete all
+#     pm2 start npm -- start
