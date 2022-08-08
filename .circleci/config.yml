@@ -242,8 +242,8 @@ jobs:
             cd .circleci/ansible
             echo [all] > /tmp/workspace/inventory.txt
             aws ec2 describe-instances \ 
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \ 
-            --output text >> /tmp/workspace/inventory.txt
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \ 
+              --output text >> /tmp/workspace/inventory.txt
             cat /tmp/workspace/inventory.txt
             
       - run: 
