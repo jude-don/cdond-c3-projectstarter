@@ -447,8 +447,8 @@ jobs:
   deploy-backend:
     docker:
       # # Docker image here that supports Ansible
-      - image: python:3.7-alpine3.11
-      # - image: cimg/base:stable
+      # - image: python:3.7-alpine3.11
+      - image: cimg/base:stable
     environment:
         TYPEORM_MIGRATIONS: $TYPEORM_MIGRATIONS
         TYPEORM_MIGRATIONS_DIR: $TYPEORM_MIGRATIONS_DIR
