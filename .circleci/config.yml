@@ -240,7 +240,7 @@ jobs:
             # cat inventory.txt
             mkdir -p /tmp/workspace
             cd .circleci/ansible
-            echo [all] > /tmp/workspace/inventory.txt
+            echo [web] > /tmp/workspace/inventory.txt
             aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> /tmp/workspace/inventory.txt
             cat /tmp/workspace/inventory.txt
             
