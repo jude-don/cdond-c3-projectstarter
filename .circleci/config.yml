@@ -512,8 +512,8 @@ jobs:
             mv artifact.tar.gz /tmp
             cd .circleci/ansible
             echo "Contents of the inventory.txt file is ------"
-            cat /tmp/workspace/inventory.txt
-            ansible-playbook -i /.circleci/ansible/inventory.txt deploy-backend.yml -vvv
+            chmod 744 /tmp/workspace/inventory.txt
+            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml -vvv
 
             # #intial
             # cd .circleci/ansible
