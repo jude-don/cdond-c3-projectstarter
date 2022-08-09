@@ -1,28 +1,58 @@
 ---
-- name: Create a directory for the project 
-  file:
-    path: /home/ubuntu/node_project
+# - name: Create a directory for the project 
+#   file:
+#     path: /home/ubuntu/node_project
+#     state: directory
+#     mode: '0755'
+
+# - name: Extract backend files into /etc/node_project
+#   unarchive:
+#     src: /tmp/artifact.tar.gz 
+#     dest: /home/ubuntu/node_project
+#   register: untar
+
+# - name: Remove tar file 
+#   ansible.builtin.file:
+#     path: /home/ubuntu/artifact.tar.gz
+#     state: absent
+
+# - name: serve file
+#   shell: |
+#     npm install
+#     npm run build
+#     pm2 stop default
+#     pm2 start npm -- start
+#   args:
+#     chdir: /home/ubuntu/node_project
+  
+
+
+- name: "Creates backend app directory"
+  file: 
+    path: ~/backend-app
     state: directory
-    mode: '0755'
 
-- name: Extract backend files into /etc/node_project
-  unarchive:
-    src: /tmp/artifact.tar.gz 
-    dest: /home/ubuntu/node_project
-  register: untar
+- name: "Unarchive backend files"
+  unarchive: 
+    src: artifact.tar.gz
+    dest: ~/backend-app
 
-- name: Remove tar file 
-  ansible.builtin.file:
-    path: /home/ubuntu/artifact.tar.gz
-    state: absent
-
-- name: serve file
+- name: "Installing Node Dependencies"
   shell: |
+    cd ~/backend-app
+    npm i
+
+- name: "Executing Node app with PM2"
+  shell: |
+    cd ~/backend-app/dist
+    
+    cd ../
     npm install
-    pm2 stop default
-    pm2 start npm -- start
-  args:
-    chdir: /home/ubuntu/node_project
+    npm run build
+    sudo npm install forever -g
+    sudo npm install ts-node -g
+    forever start -c "ts-node -r tsconfig-paths/register -r dotenv/config src/main.ts" ./
+    register: execute_node
   environment:
   - TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}"
   - TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES')}}"
@@ -34,45 +64,21 @@
   - TYPEORM_MIGRATIONS: "{{ lookup('env', 'TYPEORM_MIGRATIONS')}}"
   - TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}"
 
+- name: print message
+  debug:
+    msg: "{{ execute_node.stdout_lines }}"
 
-# - name: "Creates backend app directory"
-#   file: 
-#     path: ~/backend-app
-#     state: directory
-
-# - name: "Unarchive backend files"
-#   unarchive: 
-#     src: artifact.tar.gz
-#     dest: ~/backend-app
-
-# - name: "Installing Node Dependencies"
-#   shell: |
-#     cd ~/backend-app
-#     npm i
-
-# - name: "Executing Node app with PM2"
-#   shell: |
-#     cd ~/backend-app/dist
-    
-#     cd ../
-#     npm install
-#     npm run build
-#     sudo npm install forever -g
-#     sudo npm install ts-node -g
-#     forever start -c "ts-node -r tsconfig-paths/register -r dotenv/config src/main.ts" ./
-
-#     register: execute_node
-
-# - name: print message
-#   debug:
-#     msg: "{{ execute_node.stdout_lines }}"
-
-# - name: "Configure pm2 to start as service"
-#   become: true 
-#   shell: |
-#     env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
+- name: "Configure pm2 to start as service"
+  become: true 
+  shell: |
+    env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
 
 
+
+
+
+
+# old configuration
 
 # - name: 'update and upgrade packages.'
 #   become: yes
