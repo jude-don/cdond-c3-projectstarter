@@ -113,7 +113,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-buildid]
       - run:
           name: Back-end build
           command: |
@@ -122,7 +122,7 @@ jobs:
              npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build
+          key: backend-buildid
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -157,7 +157,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-buildid]
       - run: 
           name: Run backend test
           command: |
@@ -196,7 +196,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-buildid]
       - run: 
           name: Scan backend 
           command: |
@@ -314,7 +314,7 @@ jobs:
   #     - checkout
   #     - install_awscli
   #     - restore_cache:
-  #         keys: [backend-build]      
+  #         keys: [backend-buildid]      
   #     - attach_workspace:
   #         at: ~/
   #     - create-dotenv-file   
@@ -454,7 +454,18 @@ jobs:
     docker:
       # # Docker image here that supports Ansible
       # - image: python:3.7-alpine3.11
-      - image: cimg/base:stable
+      - image: cimg/python:3.10
+      environment:
+          TYPEORM_MIGRATIONS: $TYPEORM_MIGRATIONS
+          TYPEORM_MIGRATIONS_DIR: $TYPEORM_MIGRATIONS_DIR
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
+      # - image: cimg/base:stable
     steps:
       # Checkout code from git
       - checkout
@@ -468,7 +479,7 @@ jobs:
       #     command: |
       #       apk add --update --no-cache tar gzip nodejs npm aws-cli ansible
       - restore_cache:
-          keys: [backend-build] 
+          keys: [backend-buildid] 
       
       - install_awscli
       - install_ansible
