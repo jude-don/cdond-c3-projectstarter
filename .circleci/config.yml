@@ -455,16 +455,6 @@ jobs:
       # # Docker image here that supports Ansible
       # - image: python:3.7-alpine3.11
       - image: cimg/python:3.10
-      environment:
-          TYPEORM_MIGRATIONS: $TYPEORM_MIGRATIONS
-          TYPEORM_MIGRATIONS_DIR: $TYPEORM_MIGRATIONS_DIR
-          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
-          TYPEORM_HOST: $TYPEORM_HOST
-          TYPEORM_USERNAME: $TYPEORM_USERNAME
-          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
-          TYPEORM_DATABASE: $TYPEORM_DATABASE
-          TYPEORM_PORT: $TYPEORM_PORT
-          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
       # - image: cimg/base:stable
     steps:
       # Checkout code from git
@@ -484,6 +474,7 @@ jobs:
       - install_awscli
       - install_ansible
       - install_nodejs
+      - create-dotenv-file
       # - run:
       #     name: Install dependencies
       #     command: |
