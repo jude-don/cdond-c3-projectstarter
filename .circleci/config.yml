@@ -616,10 +616,15 @@ jobs:
           name: Install dependencies
           command: |
             # your code here
-            sudo apt install -y tar gzip curl
+            # sudo apt install -y tar gzip curl
             # curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             # unzip -qq awscliv2.zip
             # sudo ./aws/install
+            yum install tar gzip -y
+            curl https://rpm.nodesource.com/setup_13.x | bash -
+            yum install nodejs -y
+            node --version
+            npm --version
 
       - run:
           name: Save Old Workflow ID to kvdb.io
