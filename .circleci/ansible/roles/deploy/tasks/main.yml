@@ -20,11 +20,9 @@
   shell: |
     npm install
     npm run build
-    npm install forever -g
-    npm install ts-node -g
     pm2 stop default
     pm2 start npm -- start
-    # forever start -c "ts-node -r tsconfig-paths/register -r dotenv/config src/main.ts" ./
+    
   args:
     chdir: /home/ubuntu/node_project
   environment:
