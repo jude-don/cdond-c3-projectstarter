@@ -20,12 +20,11 @@
   shell: |
     npm install
     npm run build
+    npm install forever -g
+    npm install ts-node -g
     pm2 stop default
-    #pm2 start npm -- start
-    sudo npm install forever -g
-    sudo npm install ts-node -g
-    forever start -c "ts-node -r tsconfig-paths/register -r dotenv/config src/main.ts" ./
-    register: execute_node
+    pm2 start npm -- start
+    # forever start -c "ts-node -r tsconfig-paths/register -r dotenv/config src/main.ts" ./
   args:
     chdir: /home/ubuntu/node_project
   environment:
@@ -38,11 +37,6 @@
   - TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE')}}"
   - TYPEORM_MIGRATIONS: "{{ lookup('env', 'TYPEORM_MIGRATIONS')}}"
   - TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}"
-
-- name: "Configure pm2 to start as service"
-  become: true 
-  shell: |
-    env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
 
 
 # - name: "Creates backend app directory"
