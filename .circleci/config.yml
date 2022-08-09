@@ -508,23 +508,12 @@ jobs:
             npm i
             npm run build
             cd ..
+            tar -C backend -czvf artifact.tar.gz .
+            mv artifact.tar.gz /tmp
             cd .circleci/ansible
-            mkdir files
-            cd files
-            tar -C ../../../backend -czvf artifact.tar.gz .
-            # mv artifact.tar.gz /tmp
-            cd ../
-            echo "Contents of the inventory.txt file is --------"
+            echo "Contents of the inventory.txt file is ------"
             chmod 744 /tmp/workspace/inventory.txt
             ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml -vvv
-
-            
-            # tar -C backend -czvf artifact.tar.gz .
-            # mv artifact.tar.gz /tmp
-            # cd .circleci/ansible
-            # echo "Contents of the inventory.txt file is ------"
-            # chmod 744 /tmp/workspace/inventory.txt
-            # ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml -vvv
 
             # #intial
             # cd .circleci/ansible
