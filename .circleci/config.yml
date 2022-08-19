@@ -244,7 +244,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints: 
-            - "73:8a:d8:78:69:9c:49:a9:58:88:66:3c:d6:4b:08:ce"
+            - "6c:77:9e:ca:c4:d0:53:49:c5:01:02:71:77:92:c1:25"
       - run:
           name: Install dependencies
           command: |
@@ -348,7 +348,7 @@ jobs:
           at: /tmp/workspace
       - add_ssh_keys:
           fingerprints: 
-            - "73:8a:d8:78:69:9c:49:a9:58:88:66:3c:d6:4b:08:ce"
+            - "6c:77:9e:ca:c4:d0:53:49:c5:01:02:71:77:92:c1:25"
       - run:
           name: install dependencies
           command: |
@@ -503,53 +503,31 @@ jobs:
 workflows:
   my_workflow:
     jobs:
-      - build-frontend:
-          <<: *slack-context
-      - build-backend:
-          <<: *slack-context
+      - build-frontend
+      - build-backend
       - test-frontend:
-          <<: *slack-context
           requires: [build-frontend]
       - test-backend:
-          <<: *slack-context
           requires: [build-backend]
       - scan-frontend:
-          <<: *slack-context
           requires: [build-frontend]
       - scan-backend:
-          <<: *slack-context
           requires: [build-backend]
       - deploy-infrastructure:
-         <<: *slack-context
-         <<: *filter-main
          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       - configure-infrastructure:
-          <<: *slack-context
-          <<: *filter-main
           requires: [deploy-infrastructure] 
       - run-migrations:
-          <<: *slack-context
-          <<: *filter-main
           requires: [configure-infrastructure]
       - deploy-frontend:
-          <<: *slack-context
-          <<: *filter-main
           requires: [run-migrations]
       - deploy-backend:
-          <<: *slack-context
-          <<: *filter-main
           requires: [run-migrations]
       - smoke-test:
-          <<: *slack-context
-          <<: *filter-main
           requires: [deploy-frontend, deploy-backend]
       - cloudfront-update:
-          <<: *slack-context
-          <<: *filter-main
           requires: [smoke-test]
       - cleanup:
-          <<: *slack-context
-          <<: *filter-main
           requires: [cloudfront-update]
 
     
