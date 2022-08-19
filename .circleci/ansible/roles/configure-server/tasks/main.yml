@@ -3,13 +3,18 @@
 #   become: true
 #   shell: |
 #     curl -sL https://deb.nodesource.com/setup13.x | sudo -E bash - 
-- name: update apt
-  apt:
-    update_cache: yes
+
   
 - name: upgrade apt
   apt:
     upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: remove unneeded deps # sudo apt autoremove
+  become: yes
+  apt:
+    autoremove: yes
 
 - name: install nodejs repo for version 13x
   shell: |
