@@ -506,18 +506,25 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            cd backend
-            npm i
-            npm run build
-            cd ..
-            tar -C backend -czvf artifact.tar.gz .
-            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
-            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
-            # mv artifact.tar.gz /tmp
-            cd .circleci/ansible
-            echo "Contents of the inventory.txt file is ------"
+            pwd
+            tar czf backend.tar.gz backend/
+            export ANSIBLE_HOST_KEY_CHECKING=false
             chmod 744 /tmp/workspace/inventory.txt
-            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml -vvv
+            ansible-playbook -i /tmp/workspace/inventory.txt ./.circleci/ansible/deploy-backend.yml -vvv
+
+
+            # cd backend
+            # npm i
+            # npm run build
+            # cd ..
+            # tar -C backend -czvf artifact.tar.gz .
+            # mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            # mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            # # mv artifact.tar.gz /tmp
+            # cd .circleci/ansible
+            # echo "Contents of the inventory.txt file is ------"
+            # chmod 744 /tmp/workspace/inventory.txt
+            # ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml -vvv
 
             # #intial
             # cd .circleci/ansible
@@ -561,7 +568,7 @@ jobs:
       - install_nodejs
       - install_awscli
       - attach_workspace:
-          at: ~/
+          at: /tmp/workspace
       # - create-dotenv-file 
       # - run:
       #     name: Install dependencies
@@ -572,7 +579,7 @@ jobs:
       #     name: Get backend url
       #     command: |
       #       # your code here
-
+      - create-dotenv-file
       - run:
           name: Backend smoke test.
           command: |
@@ -580,7 +587,9 @@ jobs:
             export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             # # BACKEND_IP = curl https://kvdb.io/XKqqQi6NXVQbTawYKbZxy/Backend_ip
             # cat BACKEND_IP
-            # export API_URL="http://${BACKEND_IP}:3030"
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            curl -s "${API_URL}/api/status" -v
             # echo $API_URL
             # sleep 20s
             # if curl -s --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi

@@ -18,7 +18,7 @@
 
 - name: install nodejs repo for version 13x
   shell: |
-    curl https://deb.nodesource.com/setup_13.x | sudo bash -
+    curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
   args:
     executable: /bin/bash 
 
@@ -34,11 +34,14 @@
     name: pm2
     global: yes
 
-- name: "move env variables to /etc/profile.d/"
-  become: true 
-  copy:
-    src: myenv.sh
-    dest: /etc/profile.d/
+- name: install pm2
+  shell: npm install pm2 -g 
+
+# - name: "move env variables to /etc/profile.d/"
+#   become: true 
+#   copy:
+#     src: myenv.sh
+#     dest: /etc/profile.d/
 
 
 # - name: 'update and upgrade packages.' # sudo apt upgrade
