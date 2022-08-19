@@ -5,11 +5,11 @@
 #     curl -sL https://deb.nodesource.com/setup13.x | sudo -E bash - 
 
   
-- name: upgrade apt
-  apt:
-    upgrade: yes
-    update_cache: yes
-    cache_valid_time: 86400
+# - name: upgrade apt
+#   apt:
+#     upgrade: yes
+#     update_cache: yes
+#     cache_valid_time: 86400
 
 - name: remove unneeded deps # sudo apt autoremove
   become: yes
