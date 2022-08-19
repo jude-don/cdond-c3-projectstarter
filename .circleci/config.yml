@@ -71,16 +71,7 @@ commands:
             fi
           when: on_fail
 
-# use yaml syntax to reduce redundancy when defining context 
-slack-context: &slack-context
-  context:
-    - udacity-project-3
 
-filter-main: &filter-main
-  filters:
-    branches:
-      only:
-        - main
 
 
 jobs:

@@ -1,5 +1,4 @@
 ---
----
 - name: Create a directory for the project 
   file:
     path: /home/ubuntu/node_project
