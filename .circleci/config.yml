@@ -271,7 +271,7 @@ jobs:
       # - install_awscli
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["dd:4d:df:be:88:24:a8:81:ee:eb:95:fb:71:da:ee:38"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["6c:77:9e:ca:c4:d0:53:49:c5:01:02:71:77:92:c1:25"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
           at: /tmp/workspace
       # attach workspace
@@ -399,7 +399,7 @@ jobs:
       # - install_awscli
       # - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["dd:4d:df:be:88:24:a8:81:ee:eb:95:fb:71:da:ee:38"]
+          fingerprints: ["6c:77:9e:ca:c4:d0:53:49:c5:01:02:71:77:92:c1:25"]
       # - run:
       #     name: Install dependencies
       #     command: |
@@ -462,7 +462,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - add_ssh_keys:
-          fingerprints: ["dd:4d:df:be:88:24:a8:81:ee:eb:95:fb:71:da:ee:38"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["6c:77:9e:ca:c4:d0:53:49:c5:01:02:71:77:92:c1:25"] # You can get this ID in the section where you registered the SSH Key
       
       # - run:
       #     name: Install dependencies
@@ -511,7 +511,9 @@ jobs:
             npm run build
             cd ..
             tar -C backend -czvf artifact.tar.gz .
-            mv artifact.tar.gz /tmp
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            # mv artifact.tar.gz /tmp
             cd .circleci/ansible
             echo "Contents of the inventory.txt file is ------"
             chmod 744 /tmp/workspace/inventory.txt
