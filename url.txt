@@ -1,5 +1,5 @@
 Github_repository_URl = https://github.com/jude-don/udacity-cloud-devops-project-3.git
 
-S3_bucket_Url = http://udapeople-d7b25ac.s3-website-us-east-1.amazonaws.com
+S3_bucket_Url = http://udapeople-9ba15f1.s3-website-us-east-1.amazonaws.com
 
-Cloud_front_url= https://d2jx8jy8g07pp0.cloudfront.net
+Cloud_front_url= http://d1i4izyy6mzrov.cloudfront.net/
