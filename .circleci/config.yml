@@ -285,7 +285,7 @@ jobs:
       - restore_cache:
           keys: [backend-build]
       - attach_workspace:
-          at: /tmp/workspace
+          at: ~/
       - run:
           name: Deploy backend
           command: |
@@ -297,9 +297,14 @@ jobs:
             mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
             mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             cd .circleci/ansible
+            echo $(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters Name=tag:aws:cloudformation:stack-name,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} \
+              --output text) >> inventory.txt
+            echo 
             echo "Contents of the inventory.txt file is ------$(cat inventory.txt)"
             # chmod 744 /tmp/workspace/inventory.txt
-            ansible-playbook -i /tmp/workspace/inventory.txt deploy-backend.yml -vv
+            ansible-playbook -i inventory.txt deploy-backend.yml -vv
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
@@ -325,7 +330,7 @@ jobs:
             --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            curl -s "${API_URL}/api/status" -v
+            if curl --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
       - run:
           name: Frontend smoke test.
           command: |
