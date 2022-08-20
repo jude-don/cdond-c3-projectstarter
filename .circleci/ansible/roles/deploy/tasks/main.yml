@@ -35,7 +35,11 @@
 - name: start app
   become: yes
   shell: |
+    npm install forever -g
+    npm install ts-node -g
+    forever start -c "ts-node -r tsconfig-paths/register -r dotenv/config src/main.ts" ./
     pm2 delete all
+    pm2 stop default
     sudo pm2 start npm -- start
   environment:
      ENVIRONMENT: production
