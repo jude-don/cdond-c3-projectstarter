@@ -25,12 +25,11 @@
     global: yes
     state: latest
     production: yes
-- name: extract artifact
+- name: extract artifact 
   become: yes
   unarchive:
     src: files/artifact.tar.gz
     dest: .
-
 
 - name: start app
   become: yes
@@ -52,3 +51,8 @@
      TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME') }}"
      TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD') }}"
      TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE') }}"
+
+
+
+
+    #  ghhh
